@@ -8,39 +8,32 @@
 import importlib
 import os
 
-from .fairseq_optimizer import FairseqOptimizer
+from .fairseq_lr_scheduler import FairseqLRScheduler
 
 
-OPTIMIZER_REGISTRY = {}
-OPTIMIZER_CLASS_NAMES = set()
+LR_SCHEDULER_REGISTRY = {}
 
 
-def build_optimizer(args, params):
-    params = filter(lambda p: p.requires_grad, params)
-    return OPTIMIZER_REGISTRY[args.optimizer](args, params)
+def build_lr_scheduler(args, optimizer):
+    return LR_SCHEDULER_REGISTRY[args.lr_scheduler](args, optimizer)
 
 
-def register_optimizer(name):
-    """Decorator to register a new optimizer."""
+def register_lr_scheduler(name):
+    """Decorator to register a new LR scheduler."""
 
-    def register_optimizer_cls(cls):
-        if name in OPTIMIZER_REGISTRY:
-            raise ValueError('Cannot register duplicate optimizer ({})'.format(name))
-        if not issubclass(cls, FairseqOptimizer):
-            raise ValueError('Optimizer ({}: {}) must extend FairseqOptimizer'.format(name, cls.__name__))
-        if cls.__name__ in OPTIMIZER_CLASS_NAMES:
-            # We use the optimizer class name as a unique identifier in
-            # checkpoints, so all optimizer must have unique class names.
-            raise ValueError('Cannot register optimizer with duplicate class name ({})'.format(cls.__name__))
-        OPTIMIZER_REGISTRY[name] = cls
-        OPTIMIZER_CLASS_NAMES.add(cls.__name__)
+    def register_lr_scheduler_cls(cls):
+        if name in LR_SCHEDULER_REGISTRY:
+            raise ValueError('Cannot register duplicate LR scheduler ({})'.format(name))
+        if not issubclass(cls, FairseqLRScheduler):
+            raise ValueError('LR Scheduler ({}: {}) must extend FairseqLRScheduler'.format(name, cls.__name__))
+        LR_SCHEDULER_REGISTRY[name] = cls
         return cls
 
-    return register_optimizer_cls
+    return register_lr_scheduler_cls
 
 
-# automatically import any Python files in the optim/ directory
+# automatically import any Python files in the optim/lr_scheduler/ directory
 for file in os.listdir(os.path.dirname(__file__)):
     if file.endswith('.py') and not file.startswith('_'):
         module = file[:file.find('.py')]
-        importlib.import_module('fairseq.optim.' + module)
+        importlib.import_module('fairseq.optim.lr_scheduler.' + module)
