@@ -1,6 +1,7 @@
 # Introducation
 Contrastive Attention Mechanism for Abstractive Text Summarization
-
+fairseq version=0.5.0
+pytorch version=0.4.0
 
 
 # License
